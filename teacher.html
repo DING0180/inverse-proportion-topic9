@@ -258,6 +258,33 @@ main{max-width:960px}.journey-reading main{padding-top:16px}.journey-part-head{d
  .journey-phase-links{padding-top:2px;padding-bottom:5px}
  .journey-phase-links button{min-height:38px}
 }
+/* The opening triangle activity needs the same simultaneous reading and diagram view. */
+#recall-triangle .recall-workspace{grid-template-columns:minmax(0,1.1fr) minmax(0,1fr);gap:18px;align-items:stretch;height:min(600px,calc(100dvh - var(--reading-offset,110px) - 28px));min-height:230px;scroll-margin-top:var(--reading-offset,110px)}
+#recall-triangle .paired-reading-frame{height:100%;min-height:0}
+#recall-triangle .paired-reading-cue,#recall-triangle .paired-scroll-status{font-size:13px;line-height:1.5;margin:0}
+#recall-triangle .paired-reading-content>p{font-size:17px;line-height:1.8}
+#recall-triangle .recall-paired-visual{min-width:0;min-height:0;border:1px solid var(--ui-line,#cddfd2);border-radius:12px;overflow:hidden;background:white;display:flex;align-items:center}
+#recall-triangle .recall-workspace .recall-figure{margin:0;padding:12px 8px;width:100%;max-width:none}
+#recall-triangle .recall-workspace .recall-figure svg{width:100%;height:auto;max-height:min(300px,calc(100dvh - var(--reading-offset,110px) - 155px))}
+#recall-triangle .recall-workspace .recall-formula{font-size:25px;gap:2px}
+#recall-triangle .recall-workspace .recall-formula small{font-size:14px}
+#recall-triangle .triangle-next-action{gap:8px;padding:10px;margin:12px 0}
+#recall-triangle .triangle-next-action strong{font-size:14px}
+#recall-triangle .triangle-next-action button{font-size:14px;min-height:44px;padding:8px 10px}
+#recall-triangle .reading-check{margin:18px 0 8px;padding:12px}
+#recall-triangle .reading-check-options{grid-template-columns:1fr}
+#recall-triangle .reading-check-options label{font-size:16px;padding:9px}
+@media(max-width:599px){
+ #recall-triangle .recall-workspace{display:grid;grid-template-columns:minmax(0,1fr);grid-template-rows:min(175px,26dvh) minmax(0,1fr);height:calc(100dvh - var(--reading-offset,110px) - 24px);min-height:320px;gap:10px}
+ #recall-triangle .recall-paired-visual{grid-row:1}
+ #recall-triangle .paired-reading-frame{grid-row:2}
+ #recall-triangle .recall-workspace .recall-figure{height:100%;display:grid;grid-template-columns:minmax(0,1fr);align-items:center;padding:4px}
+ #recall-triangle .recall-workspace .recall-figure svg{max-height:100%;height:100%;min-width:0}
+ #recall-triangle .recall-workspace .recall-formula{display:none}
+ #recall-triangle .recall-workspace .recall-formula small{font-size:12px}
+ #recall-triangle .paired-reading-content>p{font-size:16px}
+}
+
 
 /* Interface colours only. SVG, mathematical colour keys and movable points retain their meaning. */
 :root{--paper:#fff;--bg:#f7faf7;--ink:#243b30;--muted:#5d7063;--green:#246345;--soft:#eef6ee;--line:#d3e1d5;--ui-green:#246345;--ui-soft:#eef6ee;--ui-line:#d3e1d5}
@@ -1091,9 +1118,15 @@ document.addEventListener('click',e=>{
  button.setAttribute('aria-expanded',String(visible));
  button.textContent=visible?'收起第二个三角形':'点我，显示另一个三角形 →';
  article.querySelector('[data-triangle-next-title]').textContent=visible?'对照两条高，继续做“试一试”':'下一步：比较两个三角形的面积';
- article.querySelector('svg').setAttribute('aria-label',visible?'橙色三角形PAB与绿色虚线三角形QAB共用蓝色底AB，底长4，两条紫色高的位置不同，长度都是3。':'橙色三角形PAB，蓝色底AB长4，紫色垂直高长3。');
+ article.querySelectorAll('.recall-figure svg').forEach(svg=>svg.setAttribute('aria-label',visible?'橙色三角形PAB与绿色虚线三角形QAB共用蓝色底AB，底长4，两条紫色高的位置不同，长度都是3。':'橙色三角形PAB，蓝色底AB长4，紫色垂直高长3。'));
  save();
- if(visible)article.querySelector('.recall-figure').scrollIntoView({block:'start'});
+ const workspace=article.querySelector('.recall-workspace'),reading=workspace?.querySelector('.paired-reading');
+ if(workspace&&reading){
+  workspace.scrollIntoView({block:'start'});
+  if(visible){const text=article.querySelector('#recall-triangle-compare-text');reading.scrollTop+=text.getBoundingClientRect().top-reading.getBoundingClientRect().top-10;text.tabIndex=-1;text.focus({preventScroll:true});}
+  else reading.scrollTop=0;
+  workspace.querySelector('.paired-reading-frame')._syncReadingScroll?.();
+ }else if(visible)article.querySelector('.recall-figure').scrollIntoView({block:'start'});
 });
 
 // Student reading path, in-place explanations and independent transfer checks.
@@ -1993,7 +2026,24 @@ function pairGuidedReading(){
   workspace.append(frame,visual);step.append(workspace);
   drawPlot(plot.id);
  });
+ pairTriangleRecall();
  queueJourneyPosition();
+}
+// Repeat the figure beside the comparison and question; preserve the initial formula diagram.
+function pairTriangleRecall(){
+ const article=document.getElementById('recall-triangle');
+ if(!article||article.querySelector('.recall-workspace'))return;
+ const figure=article.querySelector('.recall-figure');if(!figure)return;
+ const workspace=document.createElement('div');workspace.className='paired-workspace recall-workspace recall-comparison';workspace.id='recall-triangle-comparison-workspace';workspace.dataset.triangleComparison='';workspace.hidden=!classroom.triangleComparisonVisible;
+ const reading=document.createElement('div');reading.className='paired-reading';
+ const caption=document.createElement('p');caption.className='paired-reading-cue';caption.textContent='对照图形，读完再试一试';
+ reading.append(caption);
+ for(const selector of ['#recall-triangle-compare-text','#recall-triangle-check']){const child=article.querySelector(selector);if(child)reading.append(child);}
+ const duplicate=figure.cloneNode(true);duplicate.querySelectorAll('[id]').forEach(n=>n.removeAttribute('id'));
+ duplicate.querySelector('figcaption').textContent='对照图 · 找底和对应的高';
+ const visual=document.createElement('div');visual.className='recall-paired-visual';visual.append(duplicate);
+ workspace.append(createReadingScrollFrame(reading,caption,'recall-triangle'),visual);article.append(workspace);
+ article.querySelector('[data-triangle-reveal]').setAttribute('aria-controls','recall-second-triangle recall-triangle-comparison-workspace');
 }
 const renderBeforePairedReading=render;
 render=function(){renderBeforePairedReading();pairGuidedReading();};
@@ -2165,7 +2215,7 @@ function decorateFigureWords(root,key,source){
  figureLinkSources.set(key,source);let count=0;
  root.querySelectorAll('p,li,.guided-conclusion,.try-prompt').forEach(p=>{
   if(p.closest('.plot-panel,svg,button,label,.checkpoint-options,.options,.guided-option,.figure-link-hint,.figure-link-status,.feedback,.guided-feedback,.reading-check-feedback'))return;
-  const owner=p.closest('.guided-step,.qcard,.book-unit,.recall-picture-card');if(owner&&owner!==root)return;
+  const owner=p.closest('.guided-step,.qcard,.book-unit,.recall-comparison,.recall-picture-card');if(owner&&owner!==root)return;
   const walker=document.createTreeWalker(p,NodeFilter.SHOW_TEXT),nodes=[];while(walker.nextNode())nodes.push(walker.currentNode);
   for(const node of nodes){
    if(node.parentElement.closest('button,a,svg,label,.math-frac'))continue;
@@ -2181,7 +2231,7 @@ function decorateFigureWords(root,key,source){
  });
  if(!count)return;root.dataset.figureLinked='true';
  const hint=document.createElement('p');hint.className='figure-link-hint';hint.textContent='点带下划线的名称，对照本题图；高亮约 1 秒后自动恢复。';
- const reading=root.querySelector('.paired-reading-content');if(reading)reading.prepend(hint);else{const first=root.querySelector('p');if(first)first.before(hint);}
+ const reading=root.id==='recall-triangle'?null:root.querySelector('.paired-reading-content');if(reading)reading.prepend(hint);else{const first=root.querySelector('p');if(first)first.before(hint);}
  const status=document.createElement('span');status.className='sr-only figure-link-status';status.dataset.figureLinkStatus=key;status.setAttribute('role','status');root.append(status);
 }
 function decorateAllFigureLinks(){
@@ -2193,8 +2243,8 @@ function decorateAllFigureLinks(){
   decorateFigureWords(root,host.id,source);
  });
  document.querySelectorAll('#main .qcard > svg.exit-formula-figure, #recall-triangle .recall-figure > svg').forEach((svg,i)=>{
-  const root=svg.closest('.qcard,.recall-picture-card');let data;
-  if(root.id==='recall-triangle')data={points:{A:[100,215],B:[340,215],P:[180,35],Q:[290,35],F:[180,215]},aliases:{a:{names:['A','B'],color:'#2868ad'},b:{names:['P','F'],color:'#8554a4'}},polys:[{names:['P','A','B'],color:'#ba5824'},{names:['Q','A','B'],color:'#17664e'}],segments:[{a:'A',b:'B',color:'#2868ad'}]};
+  const root=svg.closest('.qcard,.recall-comparison,.recall-picture-card');let data;
+  if(root.closest('#recall-triangle'))data={points:{A:[100,215],B:[340,215],P:[180,35],Q:[290,35],F:[180,215]},aliases:{a:{names:['A','B'],color:'#2868ad'},b:{names:['P','F'],color:'#8554a4'}},polys:[{names:['P','A','B'],color:'#ba5824'},{names:['Q','A','B'],color:'#17664e'}],segments:[{a:'A',b:'B',color:'#2868ad'}]};
   else if(svg.getAttribute('viewBox')==='0 0 340 280')data={points:{O:[45,235],A:[129,235],P:[129,67],B:[213,235],Q:[213,151]},polys:[{names:['O','P','A'],color:'#ba5824'},{names:['O','Q','B'],color:'#17664e'}],segments:[{a:'O',b:'A',color:'#2868ad'},{a:'O',b:'B',color:'#2868ad'},{a:'P',b:'A',color:'#8554a4'},{a:'Q',b:'B',color:'#8554a4'}]};
   else data={points:{L:[55,155],R:[275,155],T:[135,30],F:[135,155]},aliases:{a:{names:['L','R'],color:'#2868ad'},b:{names:['T','F'],color:'#8554a4'}}};
   data.project=p=>p;decorateFigureWords(root,'static-figure-'+i,{host:svg.parentElement,svg:()=>svg,read:()=>data});
