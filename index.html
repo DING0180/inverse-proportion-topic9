@@ -375,6 +375,9 @@ button.lesson-entry:hover{background:#f0f7f0;border-color:#24654b}button.lesson-
 .try-correction-hint{font-size:16px;line-height:1.8;border-left:3px solid #b97345;padding:4px 12px;margin:8px 0 16px}
 .try-confetti{position:fixed;z-index:10000;pointer-events:none;width:0;height:0;font-size:28px}.try-confetti>i{position:absolute;width:7px;height:11px;border-radius:2px;pointer-events:none}
 
+.record-login main{max-width:560px;margin:9vh auto;padding:26px;width:100%}.record-login .shell{display:block}.record-login .topbar,.record-login aside,.record-login .model-fab{display:none!important}.login-card{padding:30px;border:1px solid #cddfd2;border-radius:18px;background:white}.login-card h1{font-size:30px}.login-card label{display:block;font-weight:700}.login-card input{width:100%;margin:12px 0 20px;padding:12px;border:2px solid #8cac98;border-radius:9px}.login-card button{width:100%}.login-card .muted{margin-top:18px;margin-bottom:0}.record-name{font-size:14px;font-weight:700;color:#205f46}.record-help{padding:14px 18px;background:#edf5ee;border:1px solid #cddfd2;border-radius:10px}.record-metrics{width:100%;border-collapse:collapse;font-size:15px}.record-metrics th{font-weight:700;white-space:nowrap}.record-metrics td{vertical-align:top}.record-metrics .bad{color:#a33428}.record-metrics button{font-size:14px;padding:5px 10px}.record-import{width:min(1280px,96vw);height:92vh;overflow:auto;padding:22px}.record-import h2{margin-bottom:8px}.record-import header{display:flex;justify-content:space-between;gap:16px;align-items:center}.record-import input[type=file]{max-width:100%;padding:10px 0}.record-import-status{white-space:pre-line;color:#205f46;font-size:15px}.record-summary{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;margin:20px 0}.record-summary section{border:1px solid #cedfd2;background:#f2f7f2;padding:14px;border-radius:10px}.record-summary b{display:block;font-size:25px;color:#205f46}.record-summary small{display:block}.record-detail{margin-top:22px;padding-top:20px;border-top:2px solid #cedfd2}.record-detail summary{cursor:pointer;font-weight:700;padding:12px 0}.record-detail td:nth-child(2){min-width:220px;max-width:600px}.record-error{color:#aa2f22}.record-import .empty-records{padding:30px 10px;color:#52695b}.record-personal{margin-top:20px}.record-link{font-size:14px}.record-import .table-wrap{max-height:55vh;overflow:auto}.record-import th{position:sticky;top:0;background:#f2f7f2;z-index:1}.record-login #save-warning:empty{display:none}@media(max-width:650px){.record-summary{grid-template-columns:1fr 1fr}.record-import{padding:14px}.record-name{width:100%;text-align:right}.login-card{padding:22px}.record-metrics{font-size:14px}.record-login main{margin:4vh auto}.record-import header{align-items:flex-start}}
+.record-import>header{position:sticky;top:-22px;background:white;z-index:3;padding:12px 0;border-bottom:1px solid #cedfd2}.record-detail td:last-child{white-space:nowrap}
+
 </style></head><body><div id="save-warning" role="status"></div><header class="topbar"><div class="brand">反比例函数破局者<small>第 03 课时 · 学生自主学习</small></div><div class="top-actions"><button data-action="original">原课件参考</button><button data-action="export">导出记录</button></div></header><div class="shell"><aside><div class="rail"><p class="eyebrow">自己的节奏，走完整条路</p><div id="progress-label"></div><div class="progress"><span id="progress-fill"></span></div><nav aria-label="学习导航"></nav><p class="rail-note">学习进度会自动保存。</p></div></aside><main id="main" tabindex="-1"></main></div><div class="toast" role="status" aria-live="polite"></div><dialog id="original"><div class="dialog-top"><strong>原课堂版 · 参考题目与图形</strong><button data-action="close-original">关闭 ×</button></div><iframe title="原课堂版参考" allowfullscreen></iframe></dialog>
 <script>
 'use strict';
@@ -2304,6 +2307,119 @@ for(const type of ['click','change','submit','keydown'])document.addEventListene
  if(!graded)return;const before=syncTryFeedback();setTimeout(()=>{const after=syncTryFeedback();let fired=0;for(const [key,v]of after)if(v.correct&&!before.get(key)?.correct&&fired<3){celebrateTry(v.anchor);fired++;}});
 },true);
 document.addEventListener('input',e=>{if(e.target.matches('[data-reading-fill],[data-guided-answer]'))setTimeout(syncTryFeedback,0);});
+
+// Name-only enrollment and portable records. No student information is uploaded.
+const teacherEdition=document.body.dataset.edition==='teacher';
+const recordFormat='inverse-proportion-topic9-record';
+const teacherStoreKey='topic9-teacher-imports-v1';
+const recordGuides=[['review-product','review-height'],['ppt9-example1','ppt9-variant1'],['ppt9-example2','ppt9-variant4']];
+const recordMicros=[['recall-triangle','recall-product','review-product-0','review-height-0'],['ppt9-example1-0','ppt9-example1-1','ppt9-variant1-0','ppt9-variant1-1','ppt9-variant1-2'],['ppt9-example2-0','ppt9-example2-1','ppt9-variant4-0','ppt9-variant4-1','variant4-one-share','variant4-share-relation']];
+const recordNow=()=>new Date().toISOString();
+const recordPlain=html=>{const d=document.createElement('div');d.innerHTML=String(html??'');return d.textContent.replace(/\s+/g,' ').trim();};
+const validStudentName=value=>String(value??'').trim().replace(/\s+/g,' ').replace(/[\u0000-\u001f\u007f]/g,'').slice(0,40);
+const recordHasPastWork=i=>!!classroom.compactRead[i]||recordGuides[i].some(key=>Object.values(classroom.guidedReading[key]||{}).some(s=>s.checked!=null||s.draft))||recordMicros[i].some(id=>classroom.readingChecks[id]?.draft)||classBucket(i).rounds.some(r=>r.submitted||r.draft.some(Boolean));
+classroom.recordTracking ||= {version:1,verified:{},timers:[0,1,2].map(i=>({activeMs:0,startedAt:null,completedAt:null,completionMs:null,legacy:!!recordHasPastWork(i)}))};
+const recordTrack=classroom.recordTracking;
+recordTrack.verified ||= {};
+if(!Array.isArray(recordTrack.timers)||recordTrack.timers.length!==3)recordTrack.timers=[0,1,2].map(()=>({activeMs:0,startedAt:null,completedAt:null,completionMs:null,legacy:true}));
+recordTrack.timers.forEach(t=>{if(!Number.isFinite(t.activeMs)||t.activeMs<0)t.activeMs=0;});
+function recordSpecs(part){
+ const specs=[];
+ if(part<3){
+  for(const key of recordGuides[part])guidedLessons[key].steps.forEach((q,i)=>{const s=classroom.guidedReading[key]?.[i];specs.push({id:`guided:${key}:${i}`,q,raw:s?.checked,checked:s?.checked!=null});});
+  for(const id of recordMicros[part]){const s=classroom.readingChecks[id];specs.push({id:`micro:${id}`,q:readingChecks[id],raw:s?.draft,checked:s?.checked===true});}
+ }
+ if(part>0){const round=classRound(part);classQuestions(part,round.seed).forEach((q,i)=>specs.push({id:`task:${part}:${i}`,q,raw:round.submitted?.[i],checked:!!round.submitted,round:classBucket(part).active+1,firstRaw:round.first?.answers?.[i]}));}
+ return specs;
+}
+function captureVerified(){
+ for(let part=0;part<4;part++)for(const spec of recordSpecs(part)){
+  if(!spec.checked)continue;
+  const raw=String(spec.raw??'');const old=recordTrack.verified[spec.id];
+  if(!old||old.raw!==raw)recordTrack.verified[spec.id]={raw,at:recordNow(),firstRaw:old?.firstRaw??raw};
+ }
+}
+function recordItems(part){return recordSpecs(part).map(s=>{
+ // Explicit test rounds use only their own submitted snapshot; no carry-over from an older round.
+ const saved=s.id.startsWith('task:')?(s.checked?{raw:String(s.raw??'')}:null):recordTrack.verified[s.id];
+ const raw=saved?.raw??null,opts=s.q.options||s.q.choiceLabels||null;
+ let answerText=String(s.q.answer),responseText=raw;
+ if(opts){const offset=s.q.choiceLabels?1:0;answerText=recordPlain(opts[s.q.answer-offset]??s.q.answer);if(raw!==null)responseText=recordPlain(opts[Number(raw)-offset]??raw);}
+ return {id:s.id,prompt:recordPlain(s.q.prompt),raw,expected:s.q.answer,answerText,responseText,round:s.round??null};
+});}
+function scoreRecord(items){const total=items.length,checked=items.filter(x=>x.raw!==null).length,answered=items.filter(x=>x.raw!==null&&String(x.raw).trim()).length,correct=items.filter(x=>x.raw!==null&&parseNumber(x.raw)!==null&&Math.abs(parseNumber(x.raw)-x.expected)<1e-8).length;return {total,checked,answered,correct,wrong:answered-correct,blank:total-answered,percent:checked?Math.round(correct/total*100):null};}
+const recordPercent=s=>s.percent===null?'未核对':`${s.percent}%（${s.correct} 题正确）`;
+const recordDuration=ms=>ms===null?'未记录':`${Math.floor(ms/60000)}分${String(Math.floor(ms/1000)%60).padStart(2,'0')}秒`;
+function recordTimeText(t){if(t.legacy)return '历史用时未记录';if(t.completionMs!==null)return recordDuration(t.completionMs);return t.startedAt?`进行中 · ${recordDuration(t.activeMs)}`:'未开始';}
+let recordTickAt=performance.now(),recordTickPart=null;
+function recordActivePart(){return !teacherEdition&&classroom.studentIdentity&&document.visibilityState==='visible'&&document.hasFocus()&&app.route.kind==='class-part'?app.route.st:null;}
+function recordFlush(){
+ const now=performance.now(),delta=now-recordTickAt;
+ if(recordTickPart!==null&&delta>0&&delta<30000){const t=recordTrack.timers[recordTickPart];t.activeMs+=delta;}
+ recordTickAt=now;recordTickPart=recordActivePart();
+ if(recordTickPart!==null){const t=recordTrack.timers[recordTickPart];t.startedAt ||= recordNow();}
+ recordTrack.timers.forEach((t,i)=>{if(!teacherEdition&&!t.legacy&&t.startedAt&&classroom.compactRead[i]&&!t.completedAt){t.completedAt=recordNow();t.completionMs=Math.round(t.activeMs);}});
+}
+const saveBeforeRecords=save;
+save=function(){captureVerified();recordFlush();saveBeforeRecords();};
+setInterval(()=>{if(classroom.studentIdentity&&!teacherEdition)save();},5000);
+for(const event of ['visibilitychange','pagehide','blur','focus'])window.addEventListener(event,()=>save());
+document.addEventListener('visibilitychange',()=>save());
+function makeStudentRecord(){save();return {format:recordFormat,version:1,lesson:'专题九 · 反比例函数中 k 的几何意义',exportedAt:recordNow(),student:{id:classroom.studentIdentity.id,name:classroom.studentIdentity.name},scoring:'各题最近一次核对；独立练习和出门条为当前轮最近提交；未答计入总题数',parts:[0,1,2].map(i=>({part:i+1,read:!!classroom.compactRead[i],timing:{...recordTrack.timers[i],activeMs:Math.round(recordTrack.timers[i].activeMs)},items:recordItems(i)})),exit:{items:recordItems(3)},reflection:{mastery:classroom.reflection.mastery.slice(0,3),difficulty:classroom.reflection.difficulty,next:classroom.reflection.next}};}
+function downloadRecordFile(data,name){const url=URL.createObjectURL(new Blob([JSON.stringify(data,null,2)],{type:'application/json;charset=utf-8'})),a=document.createElement('a');a.href=url;a.download=name;a.click();setTimeout(()=>URL.revokeObjectURL(url),1500);}
+exportRecords=function(){
+ if(teacherEdition){openTeacherRecords();return;}
+ if(!classroom.studentIdentity){render();return;}
+ const r=makeStudentRecord(),safe=r.student.name.replace(/[<>:"/\\|?*]/g,'_');downloadRecordFile(r,`专题九_${safe}_${r.exportedAt.replace(/[:.]/g,'-')}.json`);toast('记录已导出。请将下载的 JSON 文件作为文件发送到班级群，供老师导入。');
+};
+function recordPersonalTable(){return `<div class="table-wrap"><table class="record-metrics"><thead><tr><th>学习内容</th><th>最近核对正确率</th><th>答题进度</th><th>阅读状态</th><th>完成用时</th></tr></thead><tbody>${[0,1,2,3].map(i=>{const s=scoreRecord(recordItems(i));return `<tr><td>${i===3?'出门条':'Part '+(i+1)}</td><td>${recordPercent(s)}</td><td>已答 ${s.answered} 题，共 ${s.total} 题</td><td>${i===3?'—':classroom.compactRead[i]?'已标记读完':'未标记读完'}</td><td>${i===3?'—':recordTimeText(recordTrack.timers[i])}</td></tr>`;}).join('')}</tbody></table></div>`;}
+classReport=function(){return `<p class="eyebrow">${teacherEdition?'教师演示记录':'学习记录'}</p><h2>${esc(classroom.studentIdentity?.name||'教师演示')}的学习记录</h2>${recordPersonalTable()}<p class="muted">正确率按本 Part 全部“试一试”计算，未答计入总题数；显示最近一次核对，独立练习与出门条显示当前轮最近提交，订正后会更新。阅读完成与答题正确是两个独立指标。</p><p class="muted">用时累计本 Part 页面在前台的时间，切换窗口、标签页或离开 Part 时暂停；首次点击“本段读完”时记录完成用时。旧版本的历史用时无法补算。</p><div class="record-help"><b>交给老师：</b>点击“导出记录”，把下载的 JSON 文件发到班级群。每次补做或订正后，请重新导出。</div><div class="actions record-personal"><button class="primary" data-action="export">${teacherEdition?'导入与分析学生记录':'导出记录文件'}</button><button data-nav="home">返回学习首页</button></div>${classReflection(true)}`;};
+function recordLoginPage(){document.body.classList.add('record-login');$('#main').innerHTML=`<section class="login-card"><p class="eyebrow">专题九 · 学生版</p><h1>写下名字，开始学习</h1><p>你的答题记录和学习用时，会随姓名一起导出给老师。</p><form id="student-login-form"><label for="student-login-name">姓名</label><input id="student-login-name" name="name" autocomplete="name" maxlength="40" required value="${esc(validStudentName(classroom.name))}" placeholder="请输入真实姓名"><button class="primary" type="submit">开始学习 →</button><p id="student-login-error" class="record-error" role="alert"></p></form><p class="muted">只需姓名，无需密码。记录保存在当前浏览器中，建议使用自己的设备；导出前请确认姓名。</p></section>`;}
+const renderBeforeRecords=render;
+render=function(){
+ if(!teacherEdition&&!classroom.studentIdentity?.name){recordLoginPage();return;}
+ document.body.classList.remove('record-login');renderBeforeRecords();
+ const actions=document.querySelector('.top-actions');
+ if(!actions.querySelector('.record-name'))actions.insertAdjacentHTML('afterbegin',`<span class="record-name">${teacherEdition?'教师版 · 课堂演示':esc(classroom.studentIdentity.name)}</span>`);
+ if(teacherEdition&&!actions.querySelector('[data-teacher-records]'))actions.insertAdjacentHTML('beforeend','<button class="primary" data-teacher-records>导入与分析</button>');
+ if(teacherEdition){document.title='专题九 · 教师版';actions.querySelector('[data-action="export"]').hidden=true;}
+ else if(!actions.querySelector('[data-record-profile]'))actions.insertAdjacentHTML('beforeend','<button data-record-profile>更正姓名</button>');
+ recordFlush();
+};
+document.addEventListener('submit',e=>{if(e.target.id!=='student-login-form')return;e.preventDefault();const name=validStudentName(e.target.elements.name.value);if(!name){$('#student-login-error').textContent='请先填写姓名。';return;}classroom.studentIdentity={id:crypto.randomUUID(),name};classroom.name=name;save();render();});
+document.addEventListener('click',e=>{
+ if(e.target.closest('[data-teacher-records]'))openTeacherRecords();
+ if(e.target.closest('[data-record-profile]')){const name=prompt('更正本人的姓名（保留当前学习记录；请勿用于切换到其他学生）',classroom.studentIdentity.name);if(name===null)return;const clean=validStudentName(name);if(!clean){toast('姓名不能为空。');return;}classroom.studentIdentity.name=clean;classroom.name=clean;save();document.querySelector('.record-name').textContent=clean;if(app.route.kind==='class-report')render();}
+});
+
+// Import accepts only this record schema and renders imported text through escaping.
+function validateStudentRecord(r){
+ const fail=()=>{throw new Error('记录格式不完整或版本不支持，请学生从新版网页重新导出。');};
+ if(!r||r.format!==recordFormat||r.version!==1||!r.student||typeof r.student.id!=='string'||!/^[a-zA-Z0-9-]{8,80}$/.test(r.student.id)||typeof r.student.name!=='string'||!validStudentName(r.student.name)||r.student.name.length>40||typeof r.exportedAt!=='string'||!Number.isFinite(Date.parse(r.exportedAt))||!Array.isArray(r.parts)||r.parts.length!==3)fail();
+ const text=(s,max=3000)=>{if(typeof s!=='string'||s.length>max)fail();return s;};
+ const items=(data,part)=>{const expected=recordSpecs(part).map(s=>s.id);if(!Array.isArray(data)||data.length!==expected.length||new Set(data.map(x=>x?.id)).size!==data.length)fail();return data.map(x=>{if(!x||!expected.includes(x.id)||!Number.isFinite(x.expected)||Math.abs(x.expected)>1e9||(x.raw!==null&&(typeof x.raw!=='string'||x.raw.length>100)))fail();return {id:x.id,prompt:text(x.prompt),raw:x.raw,expected:x.expected,answerText:text(x.answerText,300),responseText:x.raw===null?null:text(x.responseText??x.raw,300)};});};
+ const parts=r.parts.map((p,i)=>{if(!p||p.part!==i+1||typeof p.read!=='boolean'||!p.timing)fail();const t=p.timing;for(const key of ['activeMs','completionMs'])if(!(key==='completionMs'&&t[key]===null)&&(!Number.isFinite(t[key])||t[key]<0||t[key]>31536000000))fail();if(typeof t.legacy!=='boolean')fail();for(const k of ['startedAt','completedAt'])if(t[k]!==null&&(typeof t[k]!=='string'||!Number.isFinite(Date.parse(t[k]))))fail();if(t.completionMs!==null&&t.completionMs>t.activeMs+1)fail();return {part:i+1,read:p.read,timing:{activeMs:t.activeMs,completionMs:t.completionMs,startedAt:t.startedAt,completedAt:t.completedAt,legacy:t.legacy},items:items(p.items,i)};});
+ return {format:recordFormat,version:1,exportedAt:r.exportedAt,student:{id:r.student.id,name:validStudentName(r.student.name)},parts,exit:{items:items(r.exit?.items,3)},reflection:{mastery:Array.isArray(r.reflection?.mastery)?r.reflection.mastery.slice(0,3).map(v=>text(v??'',100)):[],difficulty:text(r.reflection?.difficulty??'',10000),next:text(r.reflection?.next??'',10000)}};
+}
+let teacherRecords=[],teacherImportMessage='',teacherSelectedId=null;
+if(teacherEdition){try{const saved=JSON.parse(localStorage.getItem(teacherStoreKey)||'[]');if(Array.isArray(saved))for(const r of saved.slice(0,1000)){try{teacherRecords.push(validateStudentRecord(r));}catch{teacherImportMessage='部分旧导入记录无法读取，请重新导入学生文件。';}}}catch{teacherImportMessage='无法读取原有导入记录，请重新导入学生文件。';}}
+function teacherMetric(items){const s=scoreRecord(items);return `${recordPercent(s)}<br><small>已答 ${s.answered} 题，共 ${s.total} 题<br>错 ${s.wrong} · 未答 ${s.blank}</small>`;}
+function teacherAggregate(part){const groups=teacherRecords.map(r=>part===3?r.exit.items:r.parts[part].items),submitted=groups.filter(xs=>scoreRecord(xs).checked>0),correct=submitted.reduce((a,x)=>a+scoreRecord(x).correct,0),total=submitted.reduce((a,x)=>a+x.length,0);return {percent:total?Math.round(correct/total*100)+'%':'—',submitted:submitted.length};}
+function teacherDetails(r){return `<section class="record-detail"><h3>${esc(r.student.name)} · 逐题记录</h3><p class="muted">导出时间：${esc(new Date(r.exportedAt).toLocaleString('zh-CN'))}；同名学生可通过记录编号区分：${esc(r.student.id.slice(0,8))}</p>${[0,1,2,3].map(part=>{const items=part===3?r.exit.items:r.parts[part].items;return `<details ${part===3?'open':''}><summary>${part===3?'出门条':'Part '+(part+1)} · ${recordPercent(scoreRecord(items))}</summary><div class="table-wrap"><table class="record-metrics"><thead><tr><th>题号</th><th>题目</th><th>学生答案</th><th>正确答案</th><th>结果</th></tr></thead><tbody>${items.map((q,i)=>{const s=scoreRecord([q]);return `<tr><td>${i+1}</td><td>${esc(q.prompt)}</td><td>${esc(q.responseText||'未作答')}</td><td>${esc(q.answerText)}</td><td class="${s.correct?'':'bad'}">${s.correct?'✓ 正确':q.raw===null?'未核对':!q.raw.trim()?'未作答':'✕ 错误'}</td></tr>`;}).join('')}</tbody></table></div></details>`;}).join('')}<p><b>学生的疑问：</b>${esc(r.reflection.difficulty||'未填写')}</p><p><b>下一步：</b>${esc(r.reflection.next||'未填写')}</p></section>`;}
+function paintTeacherRecords(){
+ const d=$('#teacher-record-dialog');const selected=teacherRecords.find(r=>r.student.id===teacherSelectedId);
+ d.innerHTML=`<header><div><p class="eyebrow">教师版 · 学习数据</p><h2>导入学生记录，看见每一步</h2></div><button data-close-teacher>关闭 ×</button></header><p>从班级群下载学生的 JSON 记录文件，然后批量选择导入。同一记录编号保留较新的导出；同名、不同编号会分别保留。</p><label><b>选择学生记录（可多选）</b><br><input type="file" id="teacher-record-files" multiple accept=".json,application/json"></label><p class="record-import-status" role="status">${esc(teacherImportMessage)}</p><p class="muted">数据只保存在此浏览器，刷新后仍可查看；不会上传 GitHub。请保留原始文件，换设备或清除浏览器数据后需重新导入。这是学习反馈记录，并非考试身份认证。</p><div class="record-summary">${[0,1,2,3].map(i=>{const a=teacherAggregate(i);return `<section>${i===3?'出门条':'Part '+(i+1)}<b>${a.percent}</b><small>${a.submitted}/${teacherRecords.length} 人有核对记录</small></section>`;}).join('')}</div><p class="muted">汇总正确率只汇总已有核对记录的学生，按正确题数 ÷ 这些学生的全部题数计算；未作答计入分母。下面显示每位学生各题最近核对的结果，不是首次正确率。Part 用时在首次标记读完时固定，未读完显示当前累计。</p>${teacherRecords.length?`<div class="table-wrap"><table class="record-metrics"><thead><tr><th>姓名 / 记录编号</th><th>Part 1 正确率 / 用时</th><th>Part 2 正确率 / 用时</th><th>Part 3 正确率 / 用时</th><th>出门条</th><th>查看</th></tr></thead><tbody>${teacherRecords.map(r=>`<tr><td><b>${esc(r.student.name)}</b><br><small>${esc(r.student.id.slice(0,8))}<br>${esc(new Date(r.exportedAt).toLocaleString('zh-CN'))}</small></td>${r.parts.map(p=>`<td>${teacherMetric(p.items)}<br>${recordTimeText(p.timing)}<br><small>${p.read?'已标记读完':'未标记读完'}</small></td>`).join('')}<td>${teacherMetric(r.exit.items)}</td><td><button data-student-detail="${esc(r.student.id)}">逐题查看</button></td></tr>`).join('')}</tbody></table></div>`:'<p class="empty-records">还没有导入记录。导入后，会在这里显示学生成绩、学习用时和逐题答案。</p>'}${selected?teacherDetails(selected):''}`;
+}
+function openTeacherRecords(){if(!teacherEdition)return;let d=$('#teacher-record-dialog');if(!d){d=document.createElement('dialog');d.id='teacher-record-dialog';d.className='record-import';d.setAttribute('aria-label','学生记录导入与分析');document.body.append(d);}paintTeacherRecords();if(!d.open)d.showModal();}
+async function importStudentFiles(files){
+ let added=0,updated=0,skipped=0;const errors=[],next=[...teacherRecords];
+ if(files.length>200){teacherImportMessage='每次最多导入 200 个文件，请分批选择。';paintTeacherRecords();return;}
+ for(const file of files){try{if(file.size>1024*1024)throw new Error('文件超过 1 MB，请选择学生导出的记录文件。');const r=validateStudentRecord(JSON.parse(await file.text()));const i=next.findIndex(x=>x.student.id===r.student.id);if(i<0){if(next.length>=1000)throw new Error('当前浏览器已保存 1000 份记录。');next.push(r);added++;}else if(Date.parse(r.exportedAt)>Date.parse(next[i].exportedAt)){next[i]=r;updated++;}else skipped++;}catch(err){errors.push(`${file.name}：${err instanceof SyntaxError?'文件不是有效的 JSON 记录。':err.message}`);}}
+ try{localStorage.setItem(teacherStoreKey,JSON.stringify(next));teacherRecords=next;teacherImportMessage=`导入完成：新增 ${added} 人，更新 ${updated} 人，跳过重复或旧文件 ${skipped} 份。${errors.length?'\n未导入 '+errors.length+' 份：\n'+errors.join('\n'):''}`;}catch{teacherImportMessage='浏览器存储空间不足，本批未保存。请保留原始文件；已有记录未被替换。';}
+ paintTeacherRecords();
+}
+document.addEventListener('change',e=>{if(teacherEdition&&e.target.id==='teacher-record-files'){e.target.disabled=true;importStudentFiles([...e.target.files]);}});
+document.addEventListener('click',e=>{if(e.target.closest('[data-close-teacher]'))$('#teacher-record-dialog')?.close();const b=e.target.closest('[data-student-detail]');if(b){teacherSelectedId=b.dataset.studentDetail;paintTeacherRecords();$('#teacher-record-dialog .record-detail').scrollIntoView({block:'start'});}});
 
 render();
 </script>
