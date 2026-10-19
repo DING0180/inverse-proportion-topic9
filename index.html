@@ -401,6 +401,24 @@ button.lesson-entry:hover{background:#f0f7f0;border-color:#24654b}button.lesson-
 .try-separate-reason{border-top:1px solid #cfdfd2;margin-top:14px;padding-top:12px;color:#244537;font-weight:400}.try-separate-reason>p{margin:6px 0 0;line-height:1.8}.try-separate-reason[hidden],.try-correction-hint[hidden]{display:none!important}
 .try-correction-hint{font-size:16px;line-height:1.8;border-left:3px solid #b97345;padding:4px 12px;margin:8px 0 16px}
 .try-confetti{position:fixed;z-index:10000;pointer-events:none;width:0;height:0;font-size:28px}.try-confetti>i{position:absolute;width:7px;height:11px;border-radius:2px;pointer-events:none}
+/* Blue marks the exercise boundary; mathematical object colours keep their meaning. */
+#main .try-exercise,#main .reading-check,#main .qcard{border:2px solid #78a6d1;border-left:5px solid #3378b4;border-radius:12px;background:#f3f8fe;padding:14px;min-width:0;box-shadow:none}
+#main .try-exercise{margin:20px 0}
+#main .try-exercise>.guided-question{padding:0;border:0;background:transparent;margin:0}
+#main .reading-check>legend,#main .qcard>legend,#main .guided-question>legend{color:#17558b;font-weight:800;font-size:19px;line-height:1.6;padding:0 7px;width:auto}
+#main .try-exercise>.guided-question>legend{padding:0 0 8px;width:100%;border-bottom:1px solid #bfd5eb}
+#main .try-exercise .guided-reason{border-top:1px solid #bfd5eb;margin-bottom:0}
+#main .try-exercise .guided-reason>summary,#main .qcard .checkpoint-reason>summary,#main .reading-check .try-separate-reason>b{color:#17558b;font-weight:750}
+#main .try-exercise .guided-reason-body,#main .qcard .checkpoint-reason{color:var(--ink)}
+#main .try-exercise .guided-conclusion{background:#e7f0fa;border-color:#78a6d1}
+#main .reading-check .try-separate-reason{border-color:#bfd5eb;color:var(--ink)}
+#main .try-exercise .guided-option,#main .reading-check .reading-check-options label,#main .qcard .checkpoint-options label{border-color:#bdd2e7;background:#fff}
+#main .try-exercise .guided-option:has(input:checked),#main .reading-check .reading-check-options label:has(input:checked),#main .qcard .checkpoint-options label:has(input:checked){border-color:#3378b4;background:#e6f0fb}
+#main .try-exercise input,#main .reading-check input,#main .qcard input{accent-color:#2467a2}
+#main .try-exercise [data-guided-check],#main .reading-check [data-reading-verify]{background:#2467a2;color:#fff;border-color:#1b578d}
+#main .try-exercise .reading-check{background:#fff;border-left-width:3px}
+#main .try-exercise .guided-next{background:transparent}
+@media(max-width:740px){#main .try-exercise,#main .reading-check,#main .qcard{padding:10px}#main .try-exercise .reading-check{padding:9px}#main .reading-check>legend,#main .qcard>legend,#main .guided-question>legend{font-size:18px}}
 
 .record-login main{max-width:560px;margin:9vh auto;padding:26px;width:100%}.record-login .shell{display:block}.record-login .topbar,.record-login aside,.record-login .model-fab{display:none!important}.login-card{padding:30px;border:1px solid #cddfd2;border-radius:18px;background:white}.login-card h1{font-size:30px}.login-card label{display:block;font-weight:700}.login-card input{width:100%;margin:12px 0 20px;padding:12px;border:2px solid #8cac98;border-radius:9px}.login-card button{width:100%}.login-card .muted{margin-top:18px;margin-bottom:0}.record-name{font-size:14px;font-weight:700;color:#205f46}.record-help{padding:14px 18px;background:#edf5ee;border:1px solid #cddfd2;border-radius:10px}.record-metrics{width:100%;border-collapse:collapse;font-size:15px}.record-metrics th{font-weight:700;white-space:nowrap}.record-metrics td{vertical-align:top}.record-metrics .bad{color:#a33428}.record-metrics button{font-size:14px;padding:5px 10px}.record-import{width:min(1280px,96vw);height:92vh;overflow:auto;padding:22px}.record-import h2{margin-bottom:8px}.record-import header{display:flex;justify-content:space-between;gap:16px;align-items:center}.record-import input[type=file]{max-width:100%;padding:10px 0}.record-import-status{white-space:pre-line;color:#205f46;font-size:15px}.record-summary{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;margin:20px 0}.record-summary section{border:1px solid #cedfd2;background:#f2f7f2;padding:14px;border-radius:10px}.record-summary b{display:block;font-size:25px;color:#205f46}.record-summary small{display:block}.record-detail{margin-top:22px;padding-top:20px;border-top:2px solid #cedfd2}.record-detail summary{cursor:pointer;font-weight:700;padding:12px 0}.record-detail td:nth-child(2){min-width:220px;max-width:600px}.record-error{color:#aa2f22}.record-import .empty-records{padding:30px 10px;color:#52695b}.record-personal{margin-top:20px}.record-link{font-size:14px}.record-import .table-wrap{max-height:55vh;overflow:auto}.record-import th{position:sticky;top:0;background:#f2f7f2;z-index:1}.record-login #save-warning:empty{display:none}@media(max-width:650px){.record-summary{grid-template-columns:1fr 1fr}.record-import{padding:14px}.record-name{width:100%;text-align:right}.login-card{padding:22px}.record-metrics{font-size:14px}.record-login main{margin:4vh auto}.record-import header{align-items:flex-start}}
 .record-import>header{position:sticky;top:-22px;background:white;z-index:3;padding:12px 0;border-bottom:1px solid #cedfd2}.record-detail td:last-child{white-space:nowrap}
@@ -2312,6 +2330,17 @@ function emphasizeKeyRelations(root=document.getElementById('main')){
 function tryVerdict(el,status,message){
  el.textContent=message;el.dataset.tryStatus=status;el.classList.add('try-verdict');el.setAttribute('role','status');
 }
+// Keep an exercise, its controls, verdict and explanation inside one visible boundary.
+function groupTryExercises(){
+ document.querySelectorAll('.guided-step').forEach(step=>{
+  const question=step.querySelector('.guided-question'),reason=step.querySelector('.guided-reason');
+  if(!question||!reason||question.closest('.try-exercise')||question.parentElement!==reason.parentElement)return;
+  const block=document.createElement('section');block.className='try-exercise';
+  block.setAttribute('aria-label',question.querySelector('legend')?.textContent||'试一试');
+  question.before(block);
+  let node=question;while(node){const next=node.nextSibling;block.append(node);if(node===reason)break;node=next;}
+ });
+}
 function syncTryFeedback(){
  const entries=new Map();
  document.querySelectorAll('[data-reading-check]').forEach(card=>{
@@ -2338,7 +2367,7 @@ function syncTryFeedback(){
   tryVerdict(feedback,correct?'correct':blank?'blank':'wrong',correct?'✓ 对了！':blank?'尚未作答。可以先看解析，再补上答案。':'✕ 答案还不对。请看下面的解析，再提交订正。');
   entries.set(`card:${app.route.kind}:${app.route.st}:${i}`,{correct,anchor:feedback});
  });
- emphasizeKeyRelations();return entries;
+ groupTryExercises();emphasizeKeyRelations();return entries;
 }
 function celebrateTry(anchor){
  const rect=anchor.getBoundingClientRect(),layer=document.createElement('div');layer.className='try-confetti';layer.setAttribute('aria-hidden','true');
