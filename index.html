@@ -490,6 +490,37 @@ html[data-student-language="bi"] .topbar,html[data-student-language="en"] .topba
 .mastery-locked-link::before{content:"🔒 ";font-size:.85em}
 .mastery-question-focus{outline:3px solid #246bbb!important;outline-offset:4px}
 
+/* Long translated navigation labels must wrap inside their own touch target. */
+.journey-phase-links button{white-space:normal;overflow-wrap:anywhere;flex-wrap:wrap;line-height:1.4}
+.journey-phase-links button>span{flex-shrink:0}
+.topbar>.brand,.top-actions,.top-actions>*{min-width:0}
+.record-name{overflow-wrap:anywhere;max-width:14em}
+
+/* Let bilingual headings determine their height; the body gets the remaining space. */
+.model-drawer[open]{display:flex;flex-direction:column}
+.model-drawer .model-drawer-head{height:auto;min-height:90px;flex:none}
+.model-drawer-head>div{min-width:0}
+.model-drawer-head button{flex-shrink:0;white-space:normal;max-width:48%}
+.model-drawer-body{height:auto;min-height:0;flex:1}
+
+/* On short landscape screens, graph readouts and reset stay reachable by scrolling. */
+@media(min-width:600px){
+ .paired-visual{max-height:calc(100dvh - var(--reading-offset,110px) - 12px);overflow-y:auto;overscroll-behavior-y:auto;scrollbar-width:thin;scrollbar-color:#72957b #eef4ee}
+}
+@media(pointer:coarse){
+ .top-actions button,.paired-model-button,.journey-resume,.journey-phase-links button,
+ .teacher-countdown button,.teacher-countdown input,.student-language-control select{min-height:44px}
+}
+@media(max-height:600px){
+ .model-drawer .quick-model-diagram{position:static}
+}
+@media(max-width:700px){
+ .model-drawer .model-drawer-head{padding:12px 16px}
+ .record-import>header{gap:8px}
+ .record-import>header>div{min-width:0}
+ .record-import>header>button{flex-shrink:0}
+}
+
 </style></head><body><div id="save-warning" role="status"></div><header class="topbar"><div class="brand">反比例函数专题九<small>第 03 课时 · 学生自主学习</small></div><div class="top-actions"><button data-action="export">导出记录</button></div></header><div class="shell"><aside><div class="rail"><p class="eyebrow">自己的节奏，走完整条路</p><div id="progress-label"></div><div class="progress"><span id="progress-fill"></span></div><nav aria-label="学习导航"></nav><p class="rail-note">学习进度会自动保存。</p></div></aside><main id="main" tabindex="-1"></main></div><div class="toast" role="status" aria-live="polite"></div><dialog id="original"><div class="dialog-top"><strong>原课堂版 · 参考题目与图形</strong><button data-action="close-original">关闭 ×</button></div><iframe title="原课堂版参考" allowfullscreen></iframe></dialog>
 <script>
 'use strict';
@@ -2978,6 +3009,22 @@ if(!teacherEdition){
   apply();
  })();
 }
+
+// Language changes and tablet rotation can change the sticky header's actual height.
+// Re-measure without rebuilding the lesson or discarding in-progress answers.
+let tabletHeaderObserver;
+function observeTabletHeaders(){
+ if(!window.ResizeObserver)return;
+ if(!tabletHeaderObserver)tabletHeaderObserver=new ResizeObserver(()=>queueJourneyPosition());
+ tabletHeaderObserver.disconnect();
+ for(const selector of ['.topbar','.journey-position-bar']){
+  const node=document.querySelector(selector);if(node)tabletHeaderObserver.observe(node);
+ }
+ queueJourneyPosition();
+}
+const renderBeforeTabletLayout=render;
+render=function(){renderBeforeTabletLayout();observeTabletHeaders();};
+window.visualViewport?.addEventListener('resize',queueJourneyPosition,{passive:true});
 
 render();
 </script>
