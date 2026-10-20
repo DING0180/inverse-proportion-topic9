@@ -442,6 +442,9 @@ button.topic9-exercise:hover{background:#f6faf7;border-color:#24654b}button.topi
 article.teacher-timed-entry{display:flex;flex-direction:column;gap:14px;min-width:0;margin:0;padding:24px;border:2px solid #bfd4c5;border-radius:16px;background:#fff;text-align:left}
 .teacher-time-row{display:flex;align-items:center;flex-wrap:wrap;gap:8px}
 .teacher-countdown{display:flex;align-items:center;flex-wrap:wrap;gap:6px}
+.teacher-countdown .teacher-minutes{display:flex;align-items:center;gap:5px;font-size:14px;font-weight:500;margin:0}
+.teacher-countdown input{width:72px;min-width:0;min-height:40px;margin:0;padding:5px 7px;font-size:16px;border:1px solid #b9cabc;border-radius:6px;background:#fff;color:#243e32}
+.teacher-countdown input:disabled{background:#f1f4f2;color:#586c60}
 .teacher-countdown button{font-size:14px;min-height:40px;padding:5px 10px}
 .teacher-countdown [data-countdown-toggle]{color:#a34412;border-color:#cf9a78;background:#fff3e8;font-weight:700}
 .teacher-countdown output{font-size:16px;font-weight:700;color:#a34412;font-variant-numeric:tabular-nums}
@@ -2631,13 +2634,15 @@ paintTeacherRecords=function(){paintBeforeAttempts();const d=$('#teacher-record-
 if(teacherEdition){
  (() => {
   const key='topic9-teacher-countdowns-v1';
-  const fresh=i=>({remaining:classParts[i].minutes*60000,deadline:null,status:'idle'});
-  let timers=[0,1,2].map(fresh);
+  const fresh=(i,minutes=classParts[i].minutes)=>({minutes,remaining:minutes*60000,deadline:null,status:'idle'});
+  let timers=[0,1,2].map(i=>fresh(i));
   try{
    const saved=JSON.parse(sessionStorage.getItem(key));
-   if(Array.isArray(saved)&&saved.length===3)timers=saved.map((t,i)=>
-    t&&['idle','running','paused','done'].includes(t.status)&&Number.isFinite(t.remaining)&&t.remaining>=0&&t.remaining<=classParts[i].minutes*60000&&(t.status!=='running'||Number.isFinite(t.deadline))
-     ?t:fresh(i));
+   if(Array.isArray(saved)&&saved.length===3)timers=saved.map((t,i)=>{
+    const minutes=t?.minutes??classParts[i].minutes;
+    return t&&Number.isInteger(minutes)&&minutes>=1&&minutes<=999&&['idle','running','paused','done'].includes(t.status)&&Number.isFinite(t.remaining)&&t.remaining>=0&&t.remaining<=minutes*60000&&(t.status!=='running'||Number.isFinite(t.deadline))
+     ?{...t,minutes}:fresh(i);
+   });
   }catch{}
   const persist=()=>{try{sessionStorage.setItem(key,JSON.stringify(timers));}catch{}};
   const left=t=>t.status==='running'?Math.max(0,t.deadline-Date.now()):t.remaining;
@@ -2646,11 +2651,12 @@ if(teacherEdition){
    timers.forEach((t,i)=>{
     if(t.status==='running'&&left(t)===0){
      t.status='done';t.remaining=0;t.deadline=null;persist();
-     toast(`Part ${i+1} 建议用时已到，可以请学生展示与总结。`);
+     toast(`Part ${i+1} 的 ${t.minutes} 分钟计时结束，可以请学生展示与总结。`);
     }
     const box=document.querySelector(`[data-teacher-timer="${i}"]`);if(!box)return;
     box.dataset.status=t.status;
-    box.querySelector('output').textContent=t.status==='idle'?'':t.status==='done'?'建议用时已到':`${t.status==='paused'?'已暂停 · ':'剩余 '}${format(left(t))}`;
+    box.querySelector('output').textContent=t.status==='idle'?'':t.status==='done'?'计时结束':`${t.status==='paused'?'已暂停 · ':'剩余 '}${format(left(t))}`;
+    box.querySelector('input').disabled=t.status==='running'||t.status==='paused';
     const toggle=box.querySelector('[data-countdown-toggle]');
     toggle.textContent=({idle:'开始计时',running:'暂停',paused:'继续',done:'重新计时'})[t.status];
     toggle.setAttribute('aria-label',`Part ${i+1} ${toggle.textContent}`);
@@ -2666,7 +2672,7 @@ if(teacherEdition){
     card.innerHTML=button.innerHTML;
     const time=card.querySelector('.lesson-entry-time'),row=document.createElement('div');row.className='teacher-time-row';
     time.replaceWith(row);row.append(time);
-    row.insertAdjacentHTML('beforeend',`<div class="teacher-countdown" data-teacher-timer="${i}" role="group" aria-label="Part ${i+1} 课堂倒计时"><button type="button" data-countdown-toggle="${i}">开始计时</button><button type="button" data-countdown-reset="${i}" disabled aria-label="重置 Part ${i+1} 计时">重置</button><output aria-label="Part ${i+1} 剩余时间"></output></div>`);
+    row.insertAdjacentHTML('beforeend',`<div class="teacher-countdown" data-teacher-timer="${i}" role="group" aria-label="Part ${i+1} 课堂倒计时"><label class="teacher-minutes">计时 <input type="number" min="1" max="999" step="1" required value="${timers[i].minutes}" data-countdown-minutes="${i}" aria-label="Part ${i+1} 自定义计时分钟数"> 分钟</label><button type="button" data-countdown-toggle="${i}">开始计时</button><button type="button" data-countdown-reset="${i}" disabled aria-label="重置 Part ${i+1} 计时">重置</button><output aria-label="Part ${i+1} 剩余时间"></output></div>`);
     const foot=card.querySelector('.lesson-entry-foot');foot.querySelector('[aria-hidden]').remove();
     foot.insertAdjacentHTML('beforeend',`<button type="button" data-nav="class-part" data-st="${i}">进入 Part ${i+1} →</button>`);
     button.replaceWith(card);
@@ -2675,17 +2681,36 @@ if(teacherEdition){
   };
   const beforeRender=render;
   render=function(){beforeRender();paint();};
+  function readMinutes(input){
+   input.setCustomValidity('');
+   if(!input.validity.valid){input.setCustomValidity('请输入 1—999 的整数分钟。');input.reportValidity();return null;}
+   return Number(input.value);
+  }
+  document.addEventListener('input',e=>{
+   if(e.target.matches('[data-countdown-minutes]'))e.target.setCustomValidity('');
+  });
+  document.addEventListener('change',e=>{
+   const input=e.target;if(!input.matches('[data-countdown-minutes]'))return;
+   const i=Number(input.dataset.countdownMinutes);
+   if(!timers[i]||['running','paused'].includes(timers[i].status))return;
+   const minutes=readMinutes(input);if(minutes===null)return;
+   timers[i]=fresh(i,minutes);persist();paint();
+  });
   document.addEventListener('click',e=>{
    const toggle=e.target.closest('[data-countdown-toggle]'),reset=e.target.closest('[data-countdown-reset]');
    if(!toggle&&!reset)return;
    const i=Number((toggle||reset).dataset[toggle?'countdownToggle':'countdownReset']);
    if(!Number.isInteger(i)||i<0||i>2)return;
-   const t=timers[i];
-   if(reset)timers[i]=fresh(i);
+   let t=timers[i];
+   if(reset)timers[i]=fresh(i,t.minutes);
    else if(t.status==='running'){
     t.remaining=left(t);t.deadline=null;t.status=t.remaining?'paused':'done';
    }else{
-    if(t.status==='done')t.remaining=fresh(i).remaining;
+    if(t.status==='idle'||t.status==='done'){
+     const minutes=readMinutes(toggle.closest('[data-teacher-timer]').querySelector('input'));
+     if(minutes===null)return;
+     t=timers[i]=fresh(i,minutes);
+    }
     t.deadline=Date.now()+t.remaining;t.status='running';
    }
    persist();paint();
