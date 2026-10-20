@@ -455,6 +455,21 @@ article.teacher-timed-entry{display:flex;flex-direction:column;gap:14px;min-widt
 .teacher-timed-entry .lesson-entry-foot button{font-size:15px;padding:7px 10px}
 @media(max-width:599px){article.teacher-timed-entry{padding:18px}}
 
+body:not([data-edition="teacher"]) [data-ui-en]::after{content:attr(data-ui-en);display:block;font-family:Arial,sans-serif;font-size:12px;font-weight:400;line-height:1.35;letter-spacing:0;text-transform:none;margin-top:3px;opacity:.85;white-space:normal;overflow-wrap:anywhere}
+body:not([data-edition="teacher"]) button[data-ui-en]::after{pointer-events:none}
+body:not([data-edition="teacher"]) nav button[data-ui-en],
+body:not([data-edition="teacher"]) .journey-phase-links button[data-ui-en]{flex-wrap:wrap}
+body:not([data-edition="teacher"]) nav button[data-ui-en]::after,
+body:not([data-edition="teacher"]) .journey-phase-links button[data-ui-en]::after{flex-basis:100%}
+body:not([data-edition="teacher"]) .journey-phase-links button[data-ui-en]::after{font-size:11px;margin-top:0}
+body:not([data-edition="teacher"]) .lesson-entry-foot>[data-ui-en]{min-width:0}
+body:not([data-edition="teacher"]) .lesson-entry-time[data-ui-en]::after{font-size:11px}
+body:not([data-edition="teacher"]) .paired-scroll-status[data-ui-en]::after{font-size:11px;line-height:1.25}
+@media(max-width:599px){
+ body:not([data-edition="teacher"]) .top-actions button[data-ui-en]{padding:7px 9px}
+ body:not([data-edition="teacher"]) .journey-phase-links button[data-ui-en]::after{font-size:10px}
+}
+
 </style></head><body data-edition="teacher"><div id="save-warning" role="status"></div><header class="topbar"><div class="brand">反比例函数专题九<small>第 03 课时 · 学生自主学习</small></div><div class="top-actions"><button data-action="export">导出记录</button></div></header><div class="shell"><aside><div class="rail"><p class="eyebrow">自己的节奏，走完整条路</p><div id="progress-label"></div><div class="progress"><span id="progress-fill"></span></div><nav aria-label="学习导航"></nav><p class="rail-note">学习进度会自动保存。</p></div></aside><main id="main" tabindex="-1"></main></div><div class="toast" role="status" aria-live="polite"></div><dialog id="original"><div class="dialog-top"><strong>原课堂版 · 参考题目与图形</strong><button data-action="close-original">关闭 ×</button></div><iframe title="原课堂版参考" allowfullscreen></iframe></dialog>
 <script>
 'use strict';
@@ -2717,6 +2732,117 @@ if(teacherEdition){
   });
   setInterval(paint,250);
   document.addEventListener('visibilitychange',paint);
+ })();
+}
+
+// Auxiliary UI only. Keep source text, mathematical content and record strings intact.
+if(!teacherEdition){
+ (() => {
+  const words=new Map(Object.entries({
+   '学习目标与路线':'Goals & learning path','选做与课后题库':'Optional practice','知识笔记':'Study notes',
+   '我的学习收获':'My learning progress','导出记录':'Export records','导出学习记录':'Export learning records',
+   '导出记录文件':'Export record file','更正姓名':'Edit name','姓名':'Name',
+   '写下名字，开始学习':'Enter your name to begin','开始学习 →':'Start learning →',
+   '只需姓名，无需密码。记录保存在当前浏览器中，建议使用自己的设备；导出前请确认姓名。':'No password needed. Records stay in this browser. Check your name before exporting.',
+   '你的答题记录和学习用时，会随姓名一起导出给老师。':'Your name, answers and study time will be included in the file for your teacher.',
+   '今天从这里开始':'Start here','按 Part 1 → Part 2 → Part 3 学习，再完成出门条。点击下面的板块进入。':'Complete Parts 1–3, then the exit ticket. Select a card to begin.',
+   '精讲两题，再自己做一题':'Explore two examples, then try one yourself',
+   '已复习 · 可回看':'Reviewed · Open again','已作答 · 可回看':'Answered · Open again',
+   '出门条':'Exit ticket','选做题':'Optional practice','从这里开始':'Start here','需要时查阅':'Open when needed',
+   '学有余力选做':'Optional challenge','学完 Part 1—3 后完成':'Complete after Parts 1–3',
+   '继续当前学习 →':'Continue learning →','查看我的学习记录':'View my records','查看全部学习记录':'View all records',
+   '返回学习首页':'Back to home','模型速查':'Model reference','基础面积＋六个模型 →':'Basic areas & six models →',
+   '关闭 ×':'Close ×','关闭':'Close','核对':'Check answer','核对这一小步':'Check this step',
+   '现在这样操作：':'Try this:','我的答案':'My answer','恢复起点':'Reset diagram',
+   '卡住了，给我一点提示':'Need a hint?','试过以后，读详细讲解（也可以直接打开）':'Read the explanation (you can open it at any time)',
+   '原因解析':'Explanation','完整解析':'Full explanation','查看已记录的观察':'View observations',
+   '点一个选项，就能看到反馈。':'Choose an option to see feedback.',
+   '点选你认为正确的一项，再点下面的“核对这一小步”。':'Choose an answer, then select “Check this step”.',
+   '点输入框填答案，再点下面的“核对这一小步”。':'Enter your answer, then select “Check this step”.',
+   '先读提示 → 拖点观察 → 回答并核对':'Read → Drag & observe → Answer & check',
+   '对照图形，读完再试一试':'Read with the diagram, then try it.',
+   '按住橙色圆点拖动':'Press and drag the orange point.',
+   '在图外上下滑动，继续阅读。':'Scroll outside the diagram to keep reading.',
+   '✓ 已到本步末尾，可核对后继续':'End of this step. Check your answer, then continue.',
+   '回到这幅图，带着理由再看一次 ↑':'Return to the diagram and check your reasoning ↑',
+   '回到动图再看一眼 ↑':'Look at the interactive diagram again ↑',
+   '返回刚才的讲解 ↑':'Back to the explanation ↑',
+   '点带下划线的名称，对照本题图；高亮约 1 秒后自动恢复。':'Select an underlined name to highlight it in the diagram for about one second.',
+   '回看图文复习':'Review with the diagrams','回到讲解':'Back to the explanation',
+   '点我，显示另一个三角形 →':'Show the second triangle →','收起第二个三角形':'Hide the second triangle',
+   '下一步：比较两个三角形的面积':'Next: compare the two areas',
+   '对照两条高，继续做“试一试”':'Compare the heights, then try the question.',
+   '两种方法读完了，对照一下 ↓':'Compare the two methods ↓',
+   '两道题读懂了，自己做一题 →':'Now try a question on your own →',
+   '完成本 Part，查看学习小结 →':'Finish this Part & view your summary →',
+   '查看每一道“试一试”的作答次数':'View attempts for each question',
+   '查看以前的记录 / 再练一轮':'Previous attempts / New round',
+   '再练一轮':'Try another round','提交本轮答案':'Submit answers','提交订正':'Submit corrections',
+   '去做出门条 →':'Go to the exit ticket →','去做综合出门条':'Go to the final exit ticket',
+   '回看错题':'Review mistakes','补充或修改反思':'Edit your reflection',
+   '继续上次':'Resume reading','回看本 Part 路线':'Review this Part’s learning path',
+   '读懂以后，按需核对第二课时模型':'Review the previous lesson’s models if needed',
+   '核对基础面积模型':'Review the basic area model','核对同侧面积差':'Review the area-difference model',
+   '比较另一种对称图形':'Compare another symmetric figure',
+   '← 返回选做题库':'← Back to optional practice','← 返回变式题库':'← Back to the exercise library',
+   '返回当前 Part':'Back to the current Part','查看题目与完整解析 →':'View question & explanation →',
+   '需要时，再看基本模型与补充题组':'More models and practice, if needed',
+   '回看课堂分步精讲':'Review the guided explanation',
+   '回看类型一 · 例 1 精讲':'Review Type 1 · Example 1','回看类型二 · 例 2 精讲':'Review Type 2 · Example 2',
+   '▶ 播放：大面积减去小面积':'▶ Play the area subtraction animation',
+   '↻ 再看一次':'↻ Replay','重新播放':'Replay','播放动画':'Play animation',
+   '↻ 再看一次面积相减':'↻ Replay area subtraction','正在演示面积相减…':'Playing area subtraction…',
+   '学习进度会自动保存。':'Your progress is saved automatically.',
+   '保存这次自测，查看学习结果':'Save this check & view results',
+   '先读下面第 1 步的提示，再照着提示操作图形。选好或填好答案后，点“核对这一小步”，接着读“详细讲解”；读完再点“接着读…”按钮。不会时，点“卡住了，给我一点提示”。':'Read each step, explore the diagram and answer. Select “Check this step”, read the explanation, then continue. Open a hint when needed.'
+  }));
+  const candidates='button,summary,legend,.try-number,.paired-reading-cue,.paired-scroll-status,.answer-howto,.reading-check-how,.guided-how,.guided-place,.journey-position,.journey-current,.reading-drag-guide>strong,.reading-drag-guide>span,.guided-operation>b,.try-verdict,.try-separate-reason>b,.triangle-next-action strong,.lesson-entry-tag,.lesson-entry-foot>span,.lesson-entry-time,.journey-part-time,.lesson-time-inline,.topic9-card-open,.topic9-card-heading>strong,.topic9-card-heading>span,.rail-note,#progress-label,.login-card h1,.login-card>p,.login-card label,.lesson-dashboard-head h1,.lesson-dashboard-head>p,.reading-check-fill>label,.guided-question>label,.figure-link-hint';
+  function translation(el){
+   const text=el.textContent.trim().replace(/\s+/g,' ');
+   if(words.has(text))return words.get(text);
+   let m;
+   if((m=text.match(/^试一试\s*(\d+)$/)))return `Try it ${m[1]}`;
+   if((m=text.match(/^建议(?:用时)?\s*(\d+)\s*分钟$/)))return `Suggested time: ${m[1]} min`;
+   if((m=text.match(/^阅读位置 (\d+)\/(\d+)$/)))return `Reading progress ${m[1]}/${m[2]}`;
+   if((m=text.match(/^已读完 (\d+)\s*\/\s*(\d+) 段$/)))return `${m[1]} of ${m[2]} Parts read`;
+   if((m=text.match(/^↓ 下面还有内容，请继续向下滑动 · (\d+)%$/)))return `Keep scrolling — ${m[1]}%`;
+   if((m=text.match(/^拖动橙色 ([A-Z])\s*([↕↔])$/)))return `Drag the orange point ${m[1]} ${m[2]}`;
+   if((m=text.match(/^出门条与反思 · (\d+) 分钟$/)))return `Exit ticket & reflection · ${m[1]} min`;
+   if((m=text.match(/^(继续|进入|返回|回到) Part (\d+)\s*→?$/)))return `${m[1]==='继续'?'Continue to':m[1]==='进入'?'Open':'Back to'} Part ${m[2]}`;
+   if((m=text.match(/^接着读第 (\d+) 步：/)))return `Continue to step ${m[1]} →`;
+   if((m=text.match(/^接着精讲变式练习 (\d+)/)))return `Continue to guided exercise ${m[1]} →`;
+   if(text==='接着看方法二：同底等高 →')return 'Continue to method 2 →';
+   if((m=text.match(/^PPT 第 (\d+) 页$/)))return `Slide ${m[1]}`;
+   if((m=text.match(/^变式练习 (\d+)$/)))return `Practice ${m[1]}`;
+   if(el.classList.contains('guided-place')&&(m=text.match(/第 (\d+) 步 \/ (\d+) 步/)))return `Step ${m[1]} of ${m[2]}`;
+   if(el.classList.contains('try-verdict')&&text){
+    return ({correct:'Correct! Read the explanation below.',wrong:'Try again. Review the explanation and check your answer.',blank:'Enter an answer, then check.'})[el.dataset.tryStatus];
+   }
+   if(el.closest('nav')&&el.dataset.nav==='class-part')return ['Part 1 · Foundations','Part 2 · Find the area','Part 3 · Find k'][Number(el.dataset.st)];
+   if(el.hasAttribute('data-journey-phase')){
+    const st=app.route.st,n=Number(el.dataset.journeyPhase);
+    return st===0?['Area formula','Constant product','Same base & height','Summary'][n]:[st===1?'Example 1':'Example 2',st===1?'Practice 1':'Practice 4','Try on your own'][n];
+   }
+   if(el.classList.contains('journey-current')&&(m=text.match(/^Part (\d+)/)))return `Part ${m[1]} · Current section`;
+   if(el.closest('.guided-step-links')&&(m=text.match(/^(\d+)\s*·/)))return `Go to step ${m[1]}`;
+   return '';
+  }
+  function decorate(){
+   document.querySelectorAll(candidates).forEach(el=>{
+    if(el.closest('svg,script,style,.figure-text-link,.figure-link,.math-frac')||el.matches('.lesson-entry,.topic9-exercise'))return;
+    const en=translation(el);
+    if(en){if(el.dataset.uiEn!==en)el.dataset.uiEn=en;}
+    else if(el.hasAttribute('data-ui-en'))el.removeAttribute('data-ui-en');
+   });
+  }
+  // Generated labels do not alter textContent used by scoring, numbering or exports.
+  const before=render;render=function(){before();decorate();};
+  let queued=false;
+  const observer=new MutationObserver(records=>{
+   if(queued||!records.some(r=>!(r.target.nodeType===1?r.target:r.target.parentElement)?.closest('svg,.try-confetti,script,style')))return;
+   queued=true;requestAnimationFrame(()=>{queued=false;decorate();});
+  });
+  observer.observe(document.body,{childList:true,subtree:true,characterData:true});
  })();
 }
 
