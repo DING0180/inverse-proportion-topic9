@@ -439,6 +439,19 @@ button.topic9-exercise:hover{background:#f6faf7;border-color:#24654b}button.topi
 .record-import>header{position:sticky;top:-22px;background:white;z-index:3;padding:12px 0;border-bottom:1px solid #cedfd2}.record-detail td:last-child{white-space:nowrap}
 .part-learning-summary{margin:24px 0;padding:22px;border:2px solid #a9c6b3;background:#f1f7f2;border-radius:14px;scroll-margin-top:var(--reading-offset,110px)}.part-learning-summary h3{font-size:23px}.part-summary-metrics{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;margin:18px 0}.part-summary-metrics>div{background:white;padding:14px;border-radius:9px;border:1px solid #cddfd2}.part-summary-metrics b,.part-summary-metrics span{display:block}.part-summary-metrics b{font-size:25px;color:#205f46}.part-summary-metrics span{font-size:14px}.part-summary-conclusion{font-weight:700;color:#205f46}.part-learning-summary .actions{margin-top:18px}.part-learning-summary summary,.teacher-question-analysis>summary{cursor:pointer;font-weight:700;padding:12px 0}.teacher-question-analysis{border:1px solid #cddfd2;border-radius:9px;padding:12px;margin-top:20px}.teacher-question-analysis h3{margin-top:20px}.answer-attempt-history{font-size:13px}.record-detail .answer-attempt-history summary{font-size:13px;padding:4px 0}.attempt-detail-table{min-width:820px}.attempt-detail-table th{white-space:normal}.part-learning-summary td{font-size:14px}@media(max-width:700px){.part-summary-metrics{grid-template-columns:repeat(2,minmax(0,1fr))}.part-learning-summary{padding:15px}.part-summary-metrics b{font-size:21px}}
 
+article.teacher-timed-entry{display:flex;flex-direction:column;gap:14px;min-width:0;margin:0;padding:24px;border:2px solid #bfd4c5;border-radius:16px;background:#fff;text-align:left}
+.teacher-time-row{display:flex;align-items:center;flex-wrap:wrap;gap:8px}
+.teacher-countdown{display:flex;align-items:center;flex-wrap:wrap;gap:6px}
+.teacher-countdown button{font-size:14px;min-height:40px;padding:5px 10px}
+.teacher-countdown [data-countdown-toggle]{color:#a34412;border-color:#cf9a78;background:#fff3e8;font-weight:700}
+.teacher-countdown output{font-size:16px;font-weight:700;color:#a34412;font-variant-numeric:tabular-nums}
+.teacher-countdown output:empty{display:none}
+.teacher-countdown[data-status="done"] output{color:#b42318}
+.teacher-countdown button:disabled{opacity:.45;cursor:default}
+.teacher-timed-entry .lesson-entry-foot{align-items:center;flex-wrap:wrap}
+.teacher-timed-entry .lesson-entry-foot button{font-size:15px;padding:7px 10px}
+@media(max-width:599px){article.teacher-timed-entry{padding:18px}}
+
 </style></head><body><div id="save-warning" role="status"></div><header class="topbar"><div class="brand">反比例函数专题九<small>第 03 课时 · 学生自主学习</small></div><div class="top-actions"><button data-action="export">导出记录</button></div></header><div class="shell"><aside><div class="rail"><p class="eyebrow">自己的节奏，走完整条路</p><div id="progress-label"></div><div class="progress"><span id="progress-fill"></span></div><nav aria-label="学习导航"></nav><p class="rail-note">学习进度会自动保存。</p></div></aside><main id="main" tabindex="-1"></main></div><div class="toast" role="status" aria-live="polite"></div><dialog id="original"><div class="dialog-top"><strong>原课堂版 · 参考题目与图形</strong><button data-action="close-original">关闭 ×</button></div><iframe title="原课堂版参考" allowfullscreen></iframe></dialog>
 <script>
 'use strict';
@@ -2613,6 +2626,74 @@ teacherDetails=function(r){return `<section class="record-detail"><h3>${esc(r.st
 function teacherQuestionAnalysis(){if(!teacherRecords.length)return '';return `<details class="teacher-question-analysis"><summary>班级逐题分析：每道“试一试”的正确率</summary><p class="muted">当前正确率按全部已导入学生计算，未答计入分母；首次答对率只统计作答过程完整的记录。不同学生独立练习的轮次或数值可能不同，按对应题位汇总。</p>${[0,1,2,3].map(part=>{const ids=attemptOrder[part];return `<h3>${part===3?'出门条':'Part '+(part+1)}</h3><div class="table-wrap"><table class="record-metrics"><thead><tr><th>题号</th><th>当前答对率</th><th>首次答对率</th><th>完整过程 / 人数</th><th>答对前平均核对次数</th></tr></thead><tbody>${ids.map(id=>{const qs=teacherRecords.map(r=>(part===3?r.exit.items:r.parts[part].items).find(q=>q.id===id)).filter(Boolean),known=qs.filter(q=>attemptStats(q).known),first=known.filter(q=>attemptStats(q).firstCorrect).length,solved=known.map(q=>attemptStats(q).firstSuccess).filter(n=>n!==null),correct=qs.filter(q=>scoreRecord([q]).correct).length;return `<tr><td>${esc(qs[0]?.label||id)}</td><td>${qs.length?Math.round(correct/qs.length*100)+'%':'—'}（${correct} 人）</td><td>${known.length?Math.round(first/known.length*100)+'%':'历史未记录'}（${first} 人）</td><td>${known.length} 人，共 ${qs.length} 人</td><td>${solved.length?(solved.reduce((a,b)=>a+b,0)/solved.length).toFixed(1)+' 次（'+solved.length+' 人已答对）':'—'}</td></tr>`;}).join('')}</tbody></table></div>`;}).join('')}</details>`;}
 const paintBeforeAttempts=paintTeacherRecords;
 paintTeacherRecords=function(){paintBeforeAttempts();const d=$('#teacher-record-dialog'),detail=d.querySelector('.record-detail');if(detail)detail.insertAdjacentHTML('beforebegin',teacherQuestionAnalysis());else d.insertAdjacentHTML('beforeend',teacherQuestionAnalysis());};
+
+// Classroom countdowns are separate from student activity/assessment records.
+if(teacherEdition){
+ (() => {
+  const key='topic9-teacher-countdowns-v1';
+  const fresh=i=>({remaining:classParts[i].minutes*60000,deadline:null,status:'idle'});
+  let timers=[0,1,2].map(fresh);
+  try{
+   const saved=JSON.parse(sessionStorage.getItem(key));
+   if(Array.isArray(saved)&&saved.length===3)timers=saved.map((t,i)=>
+    t&&['idle','running','paused','done'].includes(t.status)&&Number.isFinite(t.remaining)&&t.remaining>=0&&t.remaining<=classParts[i].minutes*60000&&(t.status!=='running'||Number.isFinite(t.deadline))
+     ?t:fresh(i));
+  }catch{}
+  const persist=()=>{try{sessionStorage.setItem(key,JSON.stringify(timers));}catch{}};
+  const left=t=>t.status==='running'?Math.max(0,t.deadline-Date.now()):t.remaining;
+  const format=ms=>{const s=Math.ceil(ms/1000);return `${String(Math.floor(s/60)).padStart(2,'0')}:${String(s%60).padStart(2,'0')}`;};
+  function paint(){
+   timers.forEach((t,i)=>{
+    if(t.status==='running'&&left(t)===0){
+     t.status='done';t.remaining=0;t.deadline=null;persist();
+     toast(`Part ${i+1} 建议用时已到，可以请学生展示与总结。`);
+    }
+    const box=document.querySelector(`[data-teacher-timer="${i}"]`);if(!box)return;
+    box.dataset.status=t.status;
+    box.querySelector('output').textContent=t.status==='idle'?'':t.status==='done'?'建议用时已到':`${t.status==='paused'?'已暂停 · ':'剩余 '}${format(left(t))}`;
+    const toggle=box.querySelector('[data-countdown-toggle]');
+    toggle.textContent=({idle:'开始计时',running:'暂停',paused:'继续',done:'重新计时'})[t.status];
+    toggle.setAttribute('aria-label',`Part ${i+1} ${toggle.textContent}`);
+    box.querySelector('[data-countdown-reset]').disabled=t.status==='idle';
+   });
+  }
+  const beforeHome=classHome;
+  classHome=function(){
+   const html=beforeHome(),template=document.createElement('template');template.innerHTML=html;
+   template.content.querySelectorAll('.lesson-entry[data-nav="class-part"]').forEach(button=>{
+    const i=Number(button.dataset.st),card=document.createElement('article');
+    card.className='lesson-entry teacher-timed-entry';
+    card.innerHTML=button.innerHTML;
+    const time=card.querySelector('.lesson-entry-time'),row=document.createElement('div');row.className='teacher-time-row';
+    time.replaceWith(row);row.append(time);
+    row.insertAdjacentHTML('beforeend',`<div class="teacher-countdown" data-teacher-timer="${i}" role="group" aria-label="Part ${i+1} 课堂倒计时"><button type="button" data-countdown-toggle="${i}">开始计时</button><button type="button" data-countdown-reset="${i}" disabled aria-label="重置 Part ${i+1} 计时">重置</button><output aria-label="Part ${i+1} 剩余时间"></output></div>`);
+    const foot=card.querySelector('.lesson-entry-foot');foot.querySelector('[aria-hidden]').remove();
+    foot.insertAdjacentHTML('beforeend',`<button type="button" data-nav="class-part" data-st="${i}">进入 Part ${i+1} →</button>`);
+    button.replaceWith(card);
+   });
+   return template.innerHTML;
+  };
+  const beforeRender=render;
+  render=function(){beforeRender();paint();};
+  document.addEventListener('click',e=>{
+   const toggle=e.target.closest('[data-countdown-toggle]'),reset=e.target.closest('[data-countdown-reset]');
+   if(!toggle&&!reset)return;
+   const i=Number((toggle||reset).dataset[toggle?'countdownToggle':'countdownReset']);
+   if(!Number.isInteger(i)||i<0||i>2)return;
+   const t=timers[i];
+   if(reset)timers[i]=fresh(i);
+   else if(t.status==='running'){
+    t.remaining=left(t);t.deadline=null;t.status=t.remaining?'paused':'done';
+   }else{
+    if(t.status==='done')t.remaining=fresh(i).remaining;
+    t.deadline=Date.now()+t.remaining;t.status='running';
+   }
+   persist();paint();
+  });
+  setInterval(paint,250);
+  document.addEventListener('visibilitychange',paint);
+ })();
+}
 
 render();
 </script>
