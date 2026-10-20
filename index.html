@@ -441,15 +441,15 @@ button.topic9-exercise:hover{background:#f6faf7;border-color:#24654b}button.topi
 
 article.teacher-timed-entry{display:flex;flex-direction:column;gap:14px;min-width:0;margin:0;padding:24px;border:2px solid #bfd4c5;border-radius:16px;background:#fff;text-align:left}
 .teacher-time-row{display:flex;align-items:center;flex-wrap:wrap;gap:8px}
-.teacher-countdown{display:flex;align-items:center;flex-wrap:wrap;gap:6px}
+.teacher-countdown{display:flex;align-items:center;flex-wrap:wrap;gap:6px;width:100%;min-width:0}
 .teacher-countdown .teacher-minutes{display:flex;align-items:center;gap:5px;font-size:14px;font-weight:500;margin:0}
 .teacher-countdown input{width:72px;min-width:0;min-height:40px;margin:0;padding:5px 7px;font-size:16px;border:1px solid #b9cabc;border-radius:6px;background:#fff;color:#243e32}
 .teacher-countdown input:disabled{background:#f1f4f2;color:#586c60}
 .teacher-countdown button{font-size:14px;min-height:40px;padding:5px 10px}
 .teacher-countdown [data-countdown-toggle]{color:#a34412;border-color:#cf9a78;background:#fff3e8;font-weight:700}
-.teacher-countdown output{font-size:16px;font-weight:700;color:#a34412;font-variant-numeric:tabular-nums}
+.teacher-countdown output{display:block;flex-basis:100%;min-width:0;box-sizing:border-box;margin-top:6px;padding:10px 14px;border:2px solid #e2b18c;border-radius:10px;background:#fff3e8;font-size:clamp(28px,3.5vw,36px);font-weight:800;line-height:1.35;color:#a34412;font-variant-numeric:tabular-nums}
 .teacher-countdown output:empty{display:none}
-.teacher-countdown[data-status="done"] output{color:#b42318}
+.teacher-countdown[data-status="done"] output{color:#b42318;background:#fff0ed;border-color:#e6a097}
 .teacher-countdown button:disabled{opacity:.45;cursor:default}
 .teacher-timed-entry .lesson-entry-foot{align-items:center;flex-wrap:wrap}
 .teacher-timed-entry .lesson-entry-foot button{font-size:15px;padding:7px 10px}
