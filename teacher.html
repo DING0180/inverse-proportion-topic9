@@ -392,7 +392,7 @@ button.lesson-entry:hover{background:#f0f7f0;border-color:#24654b}button.lesson-
 @media(max-width:850px){.lesson-dashboard-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.optional-solution.book-unit{padding:16px}.optional-solution-grid{gap:16px}}
 @media(max-width:599px){.lesson-dashboard-grid{grid-template-columns:1fr}button.lesson-entry{min-height:170px;padding:18px}.optional-solution-grid{grid-template-columns:1fr}.optional-solution-figure{position:static;grid-row:1}.optional-solution.book-unit{padding:12px}}
 
-.lesson-entry-time{font-size:16px;font-weight:700;color:#206148;align-self:flex-start;background:#edf5ef;border-radius:6px;padding:3px 9px}
+.lesson-entry-time{font-size:16px;font-weight:700;color:#a34412;align-self:flex-start;background:#fff3e8;border-radius:6px;padding:3px 9px}
 
 /* Two columns, three rows: question identity and its own mathematical preview. */
 .topic9-library-head{margin:8px 0 24px}.topic9-library-head h2{margin:0 0 12px;font-size:28px}.topic9-library-head p{font-size:17px;line-height:1.7;margin:0;max-width:48em}
@@ -404,6 +404,8 @@ button.topic9-exercise:hover{background:#f6faf7;border-color:#24654b}button.topi
 .topic9-card-name{font-size:18px;font-weight:700;line-height:1.6}.topic9-card-open{display:flex;justify-content:space-between;gap:12px;margin-top:auto;padding-top:12px;border-top:1px solid #dde8df;font-size:15px;font-weight:500;color:#24654b}
 @media(max-width:850px){button.topic9-exercise{padding:16px}.topic9-exercises{gap:16px}.topic9-card-heading strong{font-size:19px}.topic9-card-heading>span{font-size:14px}.topic9-card-figure svg{height:200px}}
 @media(max-width:599px){.topic9-exercises{grid-template-columns:1fr}.topic9-card-figure svg{height:224px}}
+
+.journey-part-time,.lesson-time-inline{color:#a34412;font-weight:700}
 
 .key-math-relation{font-weight:800;color:#185b40;background:#fff0b8;border-radius:4px;padding:1px 4px;box-decoration-break:clone;-webkit-box-decoration-break:clone}
 .try-verdict{font-weight:750!important;line-height:1.6;margin:12px 0!important;padding:10px 12px!important;border-radius:8px!important}
@@ -1950,7 +1952,7 @@ classAssessment=function(st){
  .replace('可点“再练一轮”做精简版题目。','可点“再练一轮”做新版四题出门条。');
 };
 const exitPageBeforeApplications=classExitPage;
-classExitPage=function(){return exitPageBeforeApplications().replace('出门条与反思 · 参考 4 分钟','出门条与反思 · 建议 3 分钟');};
+classExitPage=function(){return exitPageBeforeApplications().replace('出门条与反思 · 参考 4 分钟','出门条与反思 · <span class="lesson-time-inline">建议 3 分钟</span>');};
 const homeBeforeExitApplications=classHome;
 classHome=function(){return homeBeforeExitApplications().replace('约 4 分钟完成出门条和自我反思','约 3 分钟完成四题出门条和自我反思');};
 const navBeforeExitApplications=nav;
