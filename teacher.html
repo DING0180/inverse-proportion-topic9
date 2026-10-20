@@ -392,6 +392,8 @@ button.lesson-entry:hover{background:#f0f7f0;border-color:#24654b}button.lesson-
 @media(max-width:850px){.lesson-dashboard-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.optional-solution.book-unit{padding:16px}.optional-solution-grid{gap:16px}}
 @media(max-width:599px){.lesson-dashboard-grid{grid-template-columns:1fr}button.lesson-entry{min-height:170px;padding:18px}.optional-solution-grid{grid-template-columns:1fr}.optional-solution-figure{position:static;grid-row:1}.optional-solution.book-unit{padding:12px}}
 
+.lesson-entry-time{font-size:16px;font-weight:700;color:#206148;align-self:flex-start;background:#edf5ef;border-radius:6px;padding:3px 9px}
+
 .key-math-relation{font-weight:800;color:#185b40;background:#fff0b8;border-radius:4px;padding:1px 4px;box-decoration-break:clone;-webkit-box-decoration-break:clone}
 .try-verdict{font-weight:750!important;line-height:1.6;margin:12px 0!important;padding:10px 12px!important;border-radius:8px!important}
 .try-verdict[data-try-status="idle"]{display:none!important}
@@ -1916,11 +1918,11 @@ classAssessment=function(st){
  .replace('可点“再练一轮”做精简版题目。','可点“再练一轮”做新版四题出门条。');
 };
 const exitPageBeforeApplications=classExitPage;
-classExitPage=function(){return exitPageBeforeApplications().replace('出门条与反思 · 参考 4 分钟','出门条与反思 · 参考 8 分钟');};
+classExitPage=function(){return exitPageBeforeApplications().replace('出门条与反思 · 参考 4 分钟','出门条与反思 · 建议 3 分钟');};
 const homeBeforeExitApplications=classHome;
-classHome=function(){return homeBeforeExitApplications().replace('约 4 分钟完成出门条和自我反思','约 8 分钟完成四题出门条和自我反思');};
+classHome=function(){return homeBeforeExitApplications().replace('约 4 分钟完成出门条和自我反思','约 3 分钟完成四题出门条和自我反思');};
 const navBeforeExitApplications=nav;
-nav=function(){navBeforeExitApplications();const item=document.querySelector('nav [data-nav="class-exit"]');if(item)item.textContent='出门条与反思 · 8 分钟';};
+nav=function(){navBeforeExitApplications();const item=document.querySelector('nav [data-nav="class-exit"]');if(item)item.textContent='出门条与反思 · 3 分钟';};
 
 // Render written mathematical fractions without changing answers or score ratios.
 const fractionPattern=/(\([0-9a-zA-Z|+−\-×÷ 左右.]+\)|\|[0-9a-zA-Z−\-左右.]+\||\d+(?:\.\d+)?[a-zA-Z]?|[a-zA-Z](?:左|右)?)\/(\([0-9a-zA-Z+−\-×÷ .]+\)|\d+(?:\.\d+)?[a-zA-Z]?|[a-zA-Z])|½/g;
@@ -2315,7 +2317,7 @@ classHome=function(){
   ['选做题','六道变式练习','按原题编号查阅，点击即可看题图与完整解析。','class-library',0,'学有余力选做'],
   ['知识笔记','随时回顾方法','把面积公式、常用模型和易错点放在一起核对。','notebook',0,'需要时查阅']
  ];
- return `<header class="lesson-dashboard-head"><p class="eyebrow">专题九 · 反比例函数中 k 的几何意义</p><h1>今天从这里开始</h1><p>按 Part 1 → Part 2 → Part 3 学习，再完成出门条。点击下面的板块进入。</p></header><div class="lesson-dashboard-grid">${cards.map(([tag,title,desc,kind,st,status])=>`<button type="button" class="lesson-entry" data-nav="${kind}" data-st="${st}"><span class="lesson-entry-tag">${tag}</span><strong>${title}</strong><span class="lesson-entry-description">${desc}</span><span class="lesson-entry-foot"><span>${status}</span><span aria-hidden="true">→</span></span></button>`).join('')}</div><div class="actions dashboard-footer"><button type="button" data-action="class-continue">继续当前学习 →</button><button type="button" data-nav="class-report">查看我的学习记录</button></div>`;
+ return `<header class="lesson-dashboard-head"><p class="eyebrow">专题九 · 反比例函数中 k 的几何意义</p><h1>今天从这里开始</h1><p>按 Part 1 → Part 2 → Part 3 学习，再完成出门条。点击下面的板块进入。</p></header><div class="lesson-dashboard-grid">${cards.map(([tag,title,desc,kind,st,status])=>`<button type="button" class="lesson-entry" data-nav="${kind}" data-st="${st}"><span class="lesson-entry-tag">${tag}</span>${kind==='class-part'||kind==='class-exit'?`<span class="lesson-entry-time">建议用时 ${kind==='class-exit'?3:classParts[st].minutes} 分钟</span>`:''}<strong>${title}</strong><span class="lesson-entry-description">${desc}</span><span class="lesson-entry-foot"><span>${status}</span><span aria-hidden="true">→</span></span></button>`).join('')}</div><div class="actions dashboard-footer"><button type="button" data-action="class-continue">继续当前学习 →</button><button type="button" data-nav="class-report">查看我的学习记录</button></div>`;
 };
 
 // Keep the verdict, the explanation and the short reward separate.
