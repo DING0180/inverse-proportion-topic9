@@ -495,6 +495,8 @@ html[data-student-language="bi"] .topbar,html[data-student-language="en"] .topba
 .journey-phase-links button>span{flex-shrink:0}
 .topbar>.brand,.top-actions,.top-actions>*{min-width:0}
 .record-name{overflow-wrap:anywhere;max-width:14em}
+/* Treat taps on controls as activation while retaining pan and pinch zoom. */
+button,a,summary,input,select{touch-action:manipulation}
 
 /* Let bilingual headings determine their height; the body gets the remaining space. */
 .model-drawer[open]{display:flex;flex-direction:column}
